@@ -1,12 +1,14 @@
 import requests
+import random
 from typing import Dict
+from typing import List
 import queue
 import threading
 from multiprocessing.dummy import Pool
 
 
 seen = queue.Queue()
-cores = 4
+cores = 1
 pool = Pool(cores)
 
 
@@ -53,7 +55,10 @@ def payload(i: int) -> None:
 
 def main():
     threading.Thread(target=print_daemon, daemon=True).start()
-    pool.map(payload, range(0, 1000000))
+    nums: List[int] = list(range(0, 1000000))
+    random.shuffle(nums)
+
+    pool.map(payload, nums)
 
 
 if __name__ == '__main__':
