@@ -20,8 +20,8 @@ def insert_startup(cursor, data):
     sql_insert_chann = f'INSERT INTO personal.startups.angel_list ' \
                        '(id, company_name, high_concept, product_desc, slug_url, logo_url, to_s, ' \
                        'video_url, video_thumbnail, twitter_url, blog_url, company_url, ' \
-                       'facebook_url, linkedin_url, producthunt_url, product_screenshots) ' \
-                       'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)' \
+                       'facebook_url, linkedin_url, producthunt_url) ' \
+                       'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)' \
                        'ON CONFLICT(id) DO NOTHING'
 
     cursor.execute(sql_insert_chann, data)
@@ -44,7 +44,6 @@ def json_to_array(js: json):
         js['facebook_url'],
         js['linkedin_url'],
         js['producthunt_url'],
-        js['product_screenshots']
     ]
 
 
@@ -82,10 +81,10 @@ def get_from_id(startup_id) -> str:
     }
 
     r: requests.Response = requests.get(url, headers=headers, params=params)
-    if r.status_code == 404:
-        return ""
-    else:
+    if r.status_code == 200:
         return r.text
+    else:
+        return ""
 
 
 def payload(i: int) -> None:
