@@ -126,7 +126,7 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except:
+    except psycopg2.DataError as d:
         conn.close()
         sys.exit(1)
 
