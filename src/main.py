@@ -16,11 +16,11 @@ cores: int = 1
 pool = Pool(cores)
 limit: int = 1000000
 
-conn : psycopg2= psycopg2.connect(user='salvadorguzman', password='', host='127.0.0.1', port='5432', database='personal')
+conn: psycopg2 = psycopg2.connect(user='salvadorguzman', password='', host='127.0.0.1', port='5432', database='personal')
 
 
-def insert_startup(cursor, data):
-    sql_insert_chann = f'INSERT INTO personal.startups.angel_list ' \
+def insert_startup(cursor: psycopg2, data: List[str]) -> None:
+    sql_insert_chann: str = f'INSERT INTO personal.startups.angel_list ' \
                        '(id, company_name, high_concept, product_desc, slug_url, logo_url, to_s, ' \
                        'video_url, video_thumbnail, twitter_url, blog_url, company_url, ' \
                        'facebook_url, linkedin_url, producthunt_url) ' \
@@ -30,7 +30,7 @@ def insert_startup(cursor, data):
     cursor.execute(sql_insert_chann, data)
 
 
-def json_to_array(js: json):
+def json_to_array(js: json) -> List[str]:
     return [
         js['id'],
         js['company_name'],
@@ -50,20 +50,20 @@ def json_to_array(js: json):
     ]
 
 
-def print_daemon():
+def print_daemon() -> None:
     while True:
-        msg = seen.get(block=True)
+        msg: str = seen.get(block=True)
         print(msg)
         js: json = json.loads(msg)
         arr: List[str] = json_to_array(js['startup'])
 
-        cursor = conn.cursor()
+        cursor: psycopg2 = conn.cursor()
         insert_startup(cursor, arr)
         conn.commit()
         cursor.close()
 
 
-def get_from_id(startup_id) -> str:
+def get_from_id(startup_id: str) -> str:
     url: str = f'https://angel.co/startups/{startup_id}'
     headers: Dict[str, str] = {
         'accept': 'application/json, text/javascript, */*; q=0.01',
@@ -99,11 +99,11 @@ def payload(i: int) -> None:
 
 
 def query_incumbent() -> Set[str]:
-    cursor = conn.cursor()
+    cursor: psycopg2 = conn.cursor()
     cursor.execute('SELECT DISTINCT id FROM personal.startups.angel_list');
     records = cursor.fetchall()
 
-    ignore = set()
+    ignore: Set[str] = set()
     for i in records:
         ignore.add(i[0])
 
