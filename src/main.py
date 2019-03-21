@@ -7,6 +7,7 @@ import psycopg2
 import queue
 import json
 import threading
+import sys
 from multiprocessing.dummy import Pool
 
 
@@ -127,4 +128,5 @@ if __name__ == '__main__':
         main()
     except:
         conn.close()
+        sys.exit(1)
 
