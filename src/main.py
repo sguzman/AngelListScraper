@@ -1,5 +1,19 @@
 import requests
 from typing import Dict
+import queue
+import threading
+from multiprocessing.dummy import Pool
+
+
+seen = queue.Queue()
+cores = 4
+pool = Pool(cores)
+
+
+def print_daemon():
+    while True:
+        msg = seen.get(block=True)
+        print(msg)
 
 
 def get_from_id(startup_id) -> str:
@@ -29,13 +43,17 @@ def get_from_id(startup_id) -> str:
         return r.text
 
 
-def main():
-    for i in range(1, 1000000):
-        startup_id: str = str(i)
-        text: str = get_from_id(startup_id)
+def payload(i: int) -> None:
+    startup_id: str = str(i)
+    text: str = get_from_id(startup_id)
 
-        if len(text) != 0:
-            print(text)
+    if len(text) != 0:
+        seen.put(text)
+
+
+def main():
+    threading.Thread(target=print_daemon, daemon=True).start()
+    pool.map(payload, range(0, 1000000))
 
 
 if __name__ == '__main__':
