@@ -2,7 +2,9 @@ import requests
 import random
 from typing import Dict
 from typing import List
+import psycopg2
 import queue
+import json
 import threading
 from multiprocessing.dummy import Pool
 
@@ -11,11 +13,52 @@ seen = queue.Queue()
 cores = 1
 pool = Pool(cores)
 
+conn = psycopg2.connect(user='salvadorguzman', password='', host='127.0.0.1', port='5432', database='personal')
+
+
+def insert_startup(cursor, data):
+    sql_insert_chann = f'INSERT INTO personal.startups.angel_list ' \
+                       '(id, company_name, high_concept, product_desc, slug_url, logo_url, to_s, ' \
+                       'video_url, video_thumbnail, twitter_url, blog_url, company_url, ' \
+                       'facebook_url, linkedin_url, producthunt_url, product_screenshots) ' \
+                       'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)' \
+                       'ON CONFLICT(id) DO NOTHING'
+
+    cursor.execute(sql_insert_chann, data)
+
+
+def json_to_array(js: json):
+    return [
+        js['id'],
+        js['company_name'],
+        js['high_concept'],
+        js['product_desc'],
+        js['slug_url'],
+        js['logo_url'],
+        js['to_s'],
+        js['video_url'],
+        js['video_thumbnail'],
+        js['twitter_url'],
+        js['blog_url'],
+        js['company_url'],
+        js['facebook_url'],
+        js['linkedin_url'],
+        js['producthunt_url'],
+        js['product_screenshots']
+    ]
+
 
 def print_daemon():
     while True:
         msg = seen.get(block=True)
         print(msg)
+        js: json = json.loads(msg)
+        arr: List[str] = json_to_array(js['startup'])
+
+        cursor = conn.cursor()
+        insert_startup(cursor, arr)
+        conn.commit()
+        cursor.close()
 
 
 def get_from_id(startup_id) -> str:
