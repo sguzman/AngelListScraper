@@ -7,7 +7,6 @@ import psycopg2
 import queue
 import json
 import threading
-import sys
 from multiprocessing.dummy import Pool
 
 
@@ -20,22 +19,14 @@ conn: psycopg2 = psycopg2.connect(user='salvadorguzman', password='', host='127.
 
 
 def insert_startup(cursor: psycopg2, data: List[str]) -> None:
-    try:
-        sql_insert_chann: str = f'INSERT INTO personal.startups.angel_list ' \
-                           '(id, company_name, high_concept, product_desc, slug_url, logo_url, to_s, ' \
-                           'video_url, video_thumbnail, twitter_url, blog_url, company_url, ' \
-                           'facebook_url, linkedin_url, producthunt_url) ' \
-                           'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)' \
-                           'ON CONFLICT(id) DO NOTHING'
+    sql_insert_chann: str = f'INSERT INTO personal.startups.angel_list ' \
+                       '(id, company_name, high_concept, product_desc, slug_url, logo_url, to_s, ' \
+                       'video_url, video_thumbnail, twitter_url, blog_url, company_url, ' \
+                       'facebook_url, linkedin_url, producthunt_url) ' \
+                       'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)' \
+                       'ON CONFLICT(id) DO NOTHING'
 
-        cursor.execute(sql_insert_chann, data)
-    except psycopg2.DataError as d:
-        conn.close()
-        sys.exit(1)
-    except ValueError as v:
-        conn.close()
-        print(data)
-        sys.exit(1)
+    cursor.execute(sql_insert_chann, data)
 
 
 def none_or_str(s: str):
@@ -98,10 +89,7 @@ def get_from_id(startup_id: str) -> str:
         'new_startup_profile': 1
     }
 
-    print('Calling', url)
     r: requests.Response = requests.get(url, headers=headers, params=params, timeout=5)
-    print('Called', url)
-
     if r.status_code == 200:
         return r.text
     else:
