@@ -38,24 +38,30 @@ def insert_startup(cursor: psycopg2, data: List[str]) -> None:
         sys.exit(1)
 
 
+def none_or_str(s: str):
+    if s is None:
+        return None
+    else:
+        return s.replace('\0', '')
+
 
 def json_to_array(js: json) -> List[str]:
     return [
         js['id'],
-        js['company_name'],
-        js['high_concept'],
-        js['product_desc'],
-        js['slug_url'],
-        js['logo_url'],
-        js['to_s'],
-        js['video_url'],
-        js['video_thumbnail'],
-        js['twitter_url'],
-        js['blog_url'],
-        js['company_url'],
-        js['facebook_url'],
-        js['linkedin_url'],
-        js['producthunt_url'],
+        none_or_str(js['company_name']),
+        none_or_str(js['high_concept']),
+        none_or_str(js['product_desc']),
+        none_or_str(js['slug_url']),
+        none_or_str(js['logo_url']),
+        none_or_str(js['to_s']),
+        none_or_str(js['video_url']),
+        none_or_str(js['video_thumbnail']),
+        none_or_str(js['twitter_url']),
+        none_or_str(js['blog_url']),
+        none_or_str(js['company_url']),
+        none_or_str(js['facebook_url']),
+        none_or_str(js['linkedin_url']),
+        none_or_str(js['producthunt_url']),
     ]
 
 
@@ -92,7 +98,10 @@ def get_from_id(startup_id: str) -> str:
         'new_startup_profile': 1
     }
 
-    r: requests.Response = requests.get(url, headers=headers, params=params)
+    print('Calling', url)
+    r: requests.Response = requests.get(url, headers=headers, params=params, timeout=5)
+    print('Called', url)
+
     if r.status_code == 200:
         return r.text
     else:
