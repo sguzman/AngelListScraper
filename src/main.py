@@ -2,6 +2,7 @@ import requests
 import random
 from typing import Dict
 from typing import List
+from typing import Set
 import psycopg2
 import queue
 import json
@@ -10,10 +11,11 @@ from multiprocessing.dummy import Pool
 
 
 seen = queue.Queue()
-cores = 1
+cores: int = 1
 pool = Pool(cores)
+limit: int = 1000000
 
-conn = psycopg2.connect(user='salvadorguzman', password='', host='127.0.0.1', port='5432', database='personal')
+conn : psycopg2= psycopg2.connect(user='salvadorguzman', password='', host='127.0.0.1', port='5432', database='personal')
 
 
 def insert_startup(cursor, data):
@@ -95,13 +97,34 @@ def payload(i: int) -> None:
         seen.put(text)
 
 
+def query_incumbent() -> Set[str]:
+    cursor = conn.cursor()
+    cursor.execute('SELECT DISTINCT id FROM personal.startups.angel_list');
+    records = cursor.fetchall()
+
+    ignore = set()
+    for i in records:
+        ignore.add(i[0])
+
+    cursor.close()
+    return ignore
+
+
 def main():
     threading.Thread(target=print_daemon, daemon=True).start()
-    nums: List[int] = list(range(0, 1000000))
-    random.shuffle(nums)
+    nums_set: Set[str] = set(str(x) for x in range(1, 1000000))
+    nums_incumbent: Set[str] = query_incumbent()
+    print(len(nums_incumbent), 'retrieved from table')
 
+    nums: List[str] = list(nums_set.difference(nums_incumbent))
+
+    random.shuffle(nums)
     pool.map(payload, nums)
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except:
+        conn.close()
+
