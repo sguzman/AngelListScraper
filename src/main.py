@@ -100,7 +100,7 @@ def payload(i: int) -> None:
 
 def query_incumbent() -> Set[str]:
     cursor: psycopg2 = conn.cursor()
-    cursor.execute('SELECT DISTINCT id FROM personal.startups.angel_list');
+    cursor.execute('SELECT DISTINCT id FROM personal.startups.angel_list')
     records = cursor.fetchall()
 
     ignore: Set[str] = set()
