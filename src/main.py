@@ -23,7 +23,8 @@ def insert_startup(cursor: psycopg2, data: List[str]) -> None:
                        '(id, company_name, high_concept, product_desc, slug_url, logo_url, to_s, ' \
                        'video_url, video_thumbnail, twitter_url, blog_url, company_url, ' \
                        'facebook_url, linkedin_url, producthunt_url) ' \
-                       'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+                       'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)' \
+                       'ON CONFLICT(id) DO NOTHING'
 
     cursor.execute(sql_insert_chann, data)
 
