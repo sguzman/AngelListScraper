@@ -26,8 +26,7 @@ def insert_startup(cursor: psycopg2, data: List[str]) -> None:
                        '(id, company_name, high_concept, product_desc, slug_url, logo_url, to_s, ' \
                        'video_url, video_thumbnail, twitter_url, blog_url, company_url, ' \
                        'facebook_url, linkedin_url, producthunt_url) ' \
-                       'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)' \
-                       'ON CONFLICT(id) DO NOTHING'
+                       'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 
     cursor.execute(sql_insert_chann, data)
 
@@ -37,8 +36,7 @@ def insert_null(cursor: psycopg2, num: int) -> None:
         '(id, company_name, high_concept, product_desc, slug_url, logo_url, to_s, ' \
         'video_url, video_thumbnail, twitter_url, blog_url, company_url, ' \
         'facebook_url, linkedin_url, producthunt_url) ' \
-        'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)' \
-        'ON CONFLICT(id) DO NOTHING'
+        'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
 
     data: List[Optional[int]] = [num] + ([None] * 14)
     cursor.execute(sql_insert_chann, data)
@@ -131,12 +129,12 @@ def payload(i: int) -> None:
     seen.put((i, text, len(text) != 0))
 
 
-def query_incumbent() -> Set[str]:
+def query_incumbent() -> Set[int]:
     cursor: psycopg2 = conn.cursor()
     cursor.execute('SELECT DISTINCT id FROM personal.startups.angel_list')
     records = cursor.fetchall()
 
-    ignore: Set[str] = set()
+    ignore: Set[int] = set()
     for i in records:
         ignore.add(i[0])
 
@@ -146,11 +144,11 @@ def query_incumbent() -> Set[str]:
 
 def main():
     threading.Thread(target=print_daemon, daemon=True).start()
-    nums_set: Set[str] = set(str(x) for x in range(1, 1000000))
-    nums_incumbent: Set[str] = query_incumbent()
+    nums_set: Set[int] = set(range(1, limit))
+    nums_incumbent: Set[int] = query_incumbent()
     print(len(nums_incumbent), 'retrieved from table')
 
-    nums: List[str] = list(nums_set.difference(nums_incumbent))
+    nums: List[int] = list(nums_set.difference(nums_incumbent))
 
     random.shuffle(nums)
     pool.map(payload, nums)
