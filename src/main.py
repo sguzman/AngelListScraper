@@ -93,7 +93,7 @@ def print_daemon() -> None:
         cursor.close()
 
 
-def get_from_id(startup_id: str) -> str:
+def get_from_id(startup_id: int) -> str:
     url: str = f'https://angel.co/startups/{startup_id}'
     headers: Dict[str, str] = {
         'accept': 'application/json, text/javascript, */*; q=0.01',
@@ -113,17 +113,20 @@ def get_from_id(startup_id: str) -> str:
         'new_startup_profile': 1
     }
 
-    r: requests.Response = requests.get(url, headers=headers, params=params, timeout=5)
+    try:
+        r: requests.Response = requests.get(url, headers=headers, params=params, timeout=5)
 
-    if r.status_code == 200:
-        return r.text
-    else:
-        return ""
+        if r.status_code == 200:
+            return r.text
+        else:
+            return ""
+    except requests.exceptions.ReadTimeout as e:
+        print(startup_id, e)
+        return get_from_id(startup_id)
 
 
 def payload(i: int) -> None:
-    startup_id: str = str(i)
-    text: str = get_from_id(startup_id)
+    text: str = get_from_id(i)
 
     seen.put((i, text, len(text) != 0))
 
