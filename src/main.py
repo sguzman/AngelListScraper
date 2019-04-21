@@ -15,7 +15,7 @@ from multiprocessing.dummy import Pool
 seen = queue.Queue()
 cores: int = 4
 pool = Pool(cores)
-limit: int = 4600000
+limit: int = 10000000
 
 conn: psycopg2 = \
     psycopg2.connect(user='salvadorguzman', password='', host='127.0.0.1', port='5432', database='personal')
