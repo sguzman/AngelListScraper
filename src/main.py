@@ -2,7 +2,9 @@ import requests
 import random
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Set
+from typing import Tuple
 import psycopg2
 import queue
 import json
@@ -11,11 +13,12 @@ from multiprocessing.dummy import Pool
 
 
 seen = queue.Queue()
-cores: int = 1
+cores: int = 4
 pool = Pool(cores)
 limit: int = 4600000
 
-conn: psycopg2 = psycopg2.connect(user='salvadorguzman', password='', host='127.0.0.1', port='5432', database='personal')
+conn: psycopg2 = \
+    psycopg2.connect(user='salvadorguzman', password='', host='127.0.0.1', port='5432', database='personal')
 
 
 def insert_startup(cursor: psycopg2, data: List[str]) -> None:
@@ -26,6 +29,18 @@ def insert_startup(cursor: psycopg2, data: List[str]) -> None:
                        'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)' \
                        'ON CONFLICT(id) DO NOTHING'
 
+    cursor.execute(sql_insert_chann, data)
+
+
+def insert_null(cursor: psycopg2, num: int) -> None:
+    sql_insert_chann: str = f'INSERT INTO personal.startups.angel_list ' \
+        '(id, company_name, high_concept, product_desc, slug_url, logo_url, to_s, ' \
+        'video_url, video_thumbnail, twitter_url, blog_url, company_url, ' \
+        'facebook_url, linkedin_url, producthunt_url) ' \
+        'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)' \
+        'ON CONFLICT(id) DO NOTHING'
+
+    data: List[Optional[int]] = [num] + ([None] * 14)
     cursor.execute(sql_insert_chann, data)
 
 
@@ -58,13 +73,22 @@ def json_to_array(js: json) -> List[str]:
 
 def print_daemon() -> None:
     while True:
-        msg: str = seen.get(block=True)
-        print(msg)
-        js: json = json.loads(msg)
-        arr: List[str] = json_to_array(js['startup'])
+        msg_payload: Tuple[int, str, bool] = seen.get(block=True)
+        print(msg_payload)
+
+        id: int = msg_payload[0]
+        msg: str = msg_payload[1]
+        good: bool = msg_payload[2]
 
         cursor: psycopg2 = conn.cursor()
-        insert_startup(cursor, arr)
+        if good:
+            js: json = json.loads(msg)
+            arr: List[str] = json_to_array(js['startup'])
+
+            insert_startup(cursor, arr)
+        else:
+            insert_null(cursor, id)
+
         conn.commit()
         cursor.close()
 
@@ -90,6 +114,7 @@ def get_from_id(startup_id: str) -> str:
     }
 
     r: requests.Response = requests.get(url, headers=headers, params=params, timeout=5)
+
     if r.status_code == 200:
         return r.text
     else:
@@ -100,8 +125,7 @@ def payload(i: int) -> None:
     startup_id: str = str(i)
     text: str = get_from_id(startup_id)
 
-    if len(text) != 0:
-        seen.put(text)
+    seen.put((i, text, len(text) != 0))
 
 
 def query_incumbent() -> Set[str]:
